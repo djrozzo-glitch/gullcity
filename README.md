@@ -71,3 +71,9 @@ No license has been selected yet. All rights reserved until the owner chooses on
 - Pedestrians aligned with sidewalk and animated using four procedural stride frames per character.
 - Seagull uses a safe, cleaned flight sequence; stray fragments removed.
 - High contrast comic-style score popups for hits.
+
+## v0.4 corrections
+- Seagull frames normalized onto a common canvas to avoid nose clipping/jumping.
+- Pedestrian baseline tied to the street layer instead of the old abstract floorY.
+- Street is rendered in two passes: base + front overlay so pedestrians and gull sit between scene layers.
+- Gull now glides with gentle depth motion between the pedestrian plane and the cars.
