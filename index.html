@@ -21,7 +21,7 @@ function resize(){W=innerWidth;H=innerHeight;D=Math.min(devicePixelRatio||1,2);c
 function setup(){resize();people=[];cars=[];for(let i=0;i<Math.max(7,W/170);i++)addPerson(random(0,W+100));for(let i=0;i<Math.max(3,W/360);i++)addCar(random(0,W+240));}
 addEventListener('resize',()=>resize());
 function streetMetrics(){const fullH=H*.51, y=H*.49; return {y,h:fullH};}
-function sidewalkY(){const s=streetMetrics(); return s.y + s.h*0.69;}
+function sidewalkY(){const s=streetMetrics(); return s.y + s.h*0.685;}
 function roadY(){const s=streetMetrics(); return s.y + s.h*0.94;}
 // Two deliberate flight lanes. Every 7.5 seconds the gull crosses to the other
 // lane using a smooth 1.65-second transition. This position is the visual depth cue.
@@ -98,7 +98,7 @@ function drawPedestrians(){
  let baseline=sidewalkY();
  for(let p of people){
    let h=clamp(H*.108,52,89), frame=Math.floor((time*7.2+p.phase)%4), im=imgs['walk_'+p.type+'_'+frame]||imgs['person_'+p.type], w=im?h*(im.width/im.height):h*.55;
-   let step=Math.sin(time*7.2+p.phase), bob=Math.abs(step)*.8, sway=step*.75, rot=step*.012;
+   let step=Math.sin(time*7.2+p.phase), bob=Math.abs(step)*.45, sway=step*.65, rot=step*.008;
    ctx.save(); ctx.translate(p.x+sway, baseline-bob); ctx.rotate(rot); ctx.scale(-1,1); drawImage(im,-w*.5,-h,w,h); ctx.restore();
    p._box={left:p.x-w*.33,right:p.x+w*.33,top:baseline-h+6,bottom:baseline-2};
    p._headBox={left:p.x-w*.22,right:p.x+w*.22,top:baseline-h+4,bottom:baseline-h*.52};

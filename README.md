@@ -110,3 +110,9 @@ No license has been selected yet. All rights reserved until the owner chooses on
 - Bald pedestrian spawn chance increased to 31%.
 - Car-lane streams hit the top of cars, stop on impact, and splash on the roof.
 - Missed car-lane drops end with a splash on the road.
+
+## v0.9 — Precise foreground occlusion masks
+- Rebuilt foreground mask in original street-image coordinates.
+- Each of eight bollards and both streetlamps has its own tightly fitted silhouette.
+- Front layer and base street share exact scroll, flip and size parameters.
+- Reduced pedestrian vertical bob so feet stay grounded.
