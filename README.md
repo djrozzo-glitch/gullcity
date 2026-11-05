@@ -102,3 +102,11 @@ No license has been selected yet. All rights reserved until the owner chooses on
 - Cars are visually larger but spawn less frequently.
 - Pedestrians are fewer on screen.
 - Pedestrians are flipped so they face their movement direction instead of moonwalking backwards.
+
+## v0.8 — Roof impacts and foreground occlusion
+- A separate `street_front.png` layer holds lamp posts and bollards, allowing
+  pedestrians to walk behind them while the rest of the street stays stationary.
+- People are shifted farther down onto the sidewalk.
+- Bald pedestrian spawn chance increased to 31%.
+- Car-lane streams hit the top of cars, stop on impact, and splash on the roof.
+- Missed car-lane drops end with a splash on the road.
