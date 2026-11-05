@@ -91,3 +91,8 @@ No license has been selected yet. All rights reserved until the owner chooses on
   road streams only score on cars. All other collisions are ignored.
 - Lane readout displayed in HUD.
 - No npm or server required. Commit files at repository root for GitHub Pages.
+
+## v0.6 perspective + head-hit update
+- Gull scale now changes more dramatically by lane: smaller over pedestrians, larger over cars.
+- Streams inherit lane perspective too: smaller and lighter in the pedestrian lane.
+- Pedestrian scoring now uses a head hitbox. When a stream reaches a pedestrian's head, the whole stream stops immediately.
