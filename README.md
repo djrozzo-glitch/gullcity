@@ -66,3 +66,8 @@ This is a first playable prototype. Pedestrians use subtle bobbing instead of wa
 ## License
 
 No license has been selected yet. All rights reserved until the owner chooses one.
+
+## v0.3 corrections
+- Pedestrians aligned with sidewalk and animated using four procedural stride frames per character.
+- Seagull uses a safe, cleaned flight sequence; stray fragments removed.
+- High contrast comic-style score popups for hits.
