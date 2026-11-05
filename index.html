@@ -10,7 +10,7 @@ let imgs={},W=innerWidth,H=innerHeight,D=1,time=0,world=0,score=0,hits=0,last=pe
 let people=[],cars=[],drops=[],bursts=[];
 const soundFiles=['car_hit','person_hit','bald_bonus','gull_call'];
 let sfx={},lastGullCall=0,nextGullCall=23;
-const music=new Audio('assets/sounds/gull_theme.mp3');
+const music=new Audio('sounds/gull_theme.mp3');
 music.loop=true;music.preload='none';music.volume=.33;
 function initSound(){if(Object.keys(sfx).length)return;for(const n of soundFiles){let a=new Audio('assets/sounds/'+n+'.wav');a.preload='auto';a.volume=n==='gull_call'?.16:.16;sfx[n]=a;}}
 function sound(name,volume=1){if(!soundOn||paused)return;initSound();const base=sfx[name];if(!base)return;let a=base.cloneNode();a.volume=Math.min(1,base.volume*volume);a.play().catch(()=>{});}
@@ -91,8 +91,10 @@ function layerTileSection(im,speed,y,height,srcY0,srcY1){
 function drawBaseScene(){
  const s=streetMetrics();
  drawImage(imgs.sky,0,0,W,H);
- layerTile(imgs.skyline,.12,H*.13,H*.47);
- layerTile(imgs.buildings,.40,H*.36,H*.49);
+ // Lower and slightly enlarge the distant skyline so it overlaps more naturally
+ // with the nearer roofs and removes the blue gap between city layers.
+ layerTile(imgs.skyline,.12,H*.18,H*.50);
+ layerTile(imgs.buildings,.40,H*.35,H*.51);
  layerTile(imgs.street,1.0,s.y,s.h);
 }
 function drawStreetFrontOverlay(){

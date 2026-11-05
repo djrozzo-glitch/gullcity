@@ -123,3 +123,23 @@ No license has been selected yet. All rights reserved until the owner chooses on
 - Added self-contained WAV effects: soft wind ambience, gull call, stream release, pavement/road splash, hits, bald bonus.
 - Sounds are originally synthesized for this project, not downloaded from Kenney. Sound is OFF until the player turns it on.
 - No external audio hosting or third-party sample license required.
+
+## v0.11 — Meditative audio & pacing
+
+- Background music: `sounds/gull_theme.mp3` from **your existing repository**.
+  Keep that file in place when copying this update. It is deliberately not bundled
+  here because it wasn't included in the locally available project copy.
+- `♫ Music on/off` is separate from `♪ FX on/off`, both disabled by default.
+- Game pause also pauses music, and resuming continues from the same point.
+- Removed wind, stream-release and miss sounds. Quiet hit sounds remain; gull
+  calls occur occasionally (about every 22–38 seconds when FX are enabled).
+- Slower world scrolling, walking, driving, wing animation and lane transitions.
+- Adjusted falling-stream velocity/gravity to match the slower rhythm.
+
+To update via GitHub Desktop, replace only `index.html` and optionally README.md.
+Keep the repository's `sounds/gull_theme.mp3` untouched.
+
+## v11.1 visual layering tweak
+- Lowered and enlarged the distant skyline layer.
+- Slightly lowered and enlarged the near building layer.
+- Reduced the visible blue gap between front and back city planes.
