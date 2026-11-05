@@ -77,3 +77,17 @@ No license has been selected yet. All rights reserved until the owner chooses on
 - Pedestrian baseline tied to the street layer instead of the old abstract floorY.
 - Street is rendered in two passes: base + front overlay so pedestrians and gull sit between scene layers.
 - Gull now glides with gentle depth motion between the pedestrian plane and the cars.
+
+## v0.5 — Lane & layering overhaul
+
+- Distant skyline repositioned behind the roofline, eliminating the floating city strip.
+- Removed the duplicated foreground street render that covered NPCs with repeated
+  trees, benches, fountains and flowerbeds.
+- Pedestrian baseline tied to the stone sidewalk, and pedestrian sprites reduced.
+- Car sprites reduced and aligned to the road.
+- Seagull moves automatically between two visibly different flight heights.
+  It stays on each lane, then transitions smoothly for 1.65 seconds.
+- Streams have a lane locked at release: sidewalk streams only score on people,
+  road streams only score on cars. All other collisions are ignored.
+- Lane readout displayed in HUD.
+- No npm or server required. Commit files at repository root for GitHub Pages.

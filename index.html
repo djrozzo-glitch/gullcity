@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>Gull and the City</title><link rel="icon" type="image/svg+xml" href="favicon.svg"><meta name="theme-color" content="#b9d4ed"><meta name="description" content="A cozy, endless seagull arcade game above a hand-painted city."><style>
 *{box-sizing:border-box}html,body{height:100%;width:100%;margin:0;overflow:hidden;touch-action:none;font-family:Georgia,serif;background:#b5cef3}canvas{width:100%;height:100%;display:block}#hud{position:fixed;top:16px;left:18px;color:#48505d;text-shadow:0 1px 2px #fffe;pointer-events:none}#hud h1{font-size:clamp(17px,2.25vw,30px);margin:0;letter-spacing:.015em;font-weight:700}#score{font-size:38px;font-family:system-ui,sans-serif;font-weight:800;line-height:1.1}#rules{font:11px system-ui,sans-serif;letter-spacing:.06em;font-weight:600}#stats{position:fixed;right:18px;top:20px;text-align:right;font:12px system-ui,sans-serif;color:#4f5662;text-shadow:0 1px 3px white;pointer-events:none}#center{position:fixed;left:50%;top:44%;transform:translate(-50%,-50%);text-align:center;color:#485064;text-shadow:0 2px 2px #fffc;pointer-events:none;transition:opacity .65s;width:90%}#center strong{font-size:clamp(30px,5vw,65px);font-weight:400;display:block}#center small{font:12px system-ui,sans-serif;display:block;margin-top:15px;letter-spacing:.12em}#center.hide{opacity:0}#bottom{position:fixed;bottom:22px;width:100%;text-align:center;color:#536373;font:11px system-ui,sans-serif;letter-spacing:.14em;pointer-events:none;text-shadow:0 1px 2px white}button{border:1px solid #7e82947a;background:#fff9eacb;color:#505969;border-radius:30px;padding:9px 14px;cursor:pointer;font:12px system-ui,sans-serif}#sound{position:fixed;right:18px;bottom:15px}#pause{position:fixed;right:130px;bottom:15px}.loading{position:fixed;left:50%;top:65%;transform:translateX(-50%);font:12px system-ui;color:#465}.loading.hide{display:none}@media(max-width:620px){#bottom{display:none}#stats{font-size:10px}#hud h1{font-size:17px}#rules{font-size:9px}}
-</style></head><body><canvas id="game"></canvas><div id="hud"><h1>Gull and the City</h1><div id="score">0</div><div id="rules">BALD +5 &nbsp;·&nbsp; PERSON +2 &nbsp;·&nbsp; CAR +1</div></div><div id="stats"><div id="meters">0 m flown</div><div id="hits">0 hits</div></div><div id="center"><strong>Just fly.</strong><small>CLICK · TAP · SPACE TO DROP</small></div><div class="loading" id="loading">Painting the city…</div><div id="bottom">TAKE YOUR TIME · THERE IS NO END</div><button id="pause">Ⅱ Pause</button><button id="sound">♫ Sound off</button>
+</style></head><body><canvas id="game"></canvas><div id="hud"><h1>Gull and the City</h1><div id="score">0</div><div id="rules">BALD +5 &nbsp;·&nbsp; PERSON +2 &nbsp;·&nbsp; CAR +1</div></div><div id="stats"><div id="meters">0 m flown</div><div id="hits">0 hits</div><div id="lane" style="margin-top:7px;font-weight:800;letter-spacing:.08em">SIDEWALK · PEOPLE</div></div><div id="center"><strong>Just fly.</strong><small>CLICK · TAP · SPACE TO DROP</small></div><div class="loading" id="loading">Painting the city…</div><div id="bottom">TAKE YOUR TIME · THERE IS NO END</div><button id="pause">Ⅱ Pause</button><button id="sound">♫ Sound off</button>
 <script>
 
 (()=>{'use strict';
@@ -19,15 +19,27 @@ Promise.all(imagePaths.map(([name,path])=>new Promise(resolve=>{let im=new Image
 function resize(){W=innerWidth;H=innerHeight;D=Math.min(devicePixelRatio||1,2);canvas.width=Math.floor(W*D);canvas.height=Math.floor(H*D);ctx.setTransform(D,0,0,D,0,0);ctx.imageSmoothingEnabled=true;}
 function setup(){resize();people=[];cars=[];for(let i=0;i<Math.max(10,W/120);i++)addPerson(random(0,W+100));for(let i=0;i<Math.max(4,W/260);i++)addCar(random(0,W+240));}
 addEventListener('resize',()=>resize());
-function streetMetrics(){const fullH=H*.54, y=H*.495; return {y,h:fullH};}
-function sidewalkY(){const s=streetMetrics(); return s.y + s.h*0.70;}
+function streetMetrics(){const fullH=H*.51, y=H*.49; return {y,h:fullH};}
+function sidewalkY(){const s=streetMetrics(); return s.y + s.h*0.64;}
 function roadY(){const s=streetMetrics(); return s.y + s.h*0.94;}
+// Two deliberate flight lanes. Every 7.5 seconds the gull crosses to the other
+// lane using a smooth 1.65-second transition. This position is the visual depth cue.
 function birdState(){
- const z=.5+.5*Math.sin(time*.32);
- const x=W*.28 + Math.sin(time*.22)*W*.025;
- const y=H*.19 + Math.sin(time*1.45)*Math.min(14,H*.018) + (1-z)*18;
- const scale=.88 + z*.18;
- return {x,y,z,scale};
+ const cycle=15, phase=time%cycle, transition=1.65;
+ let blend;
+ if(phase<6.0) blend=0;
+ else if(phase<6.0+transition){
+   const u=(phase-6.0)/transition; blend=u*u*(3-2*u);
+ }else if(phase<13.35) blend=1;
+ else {
+   const u=(phase-13.35)/transition; blend=1-u*u*(3-2*u);
+ }
+ blend=clamp(blend,0,1);
+ const lane=blend<.5?'people':'cars';
+ const x=W*.28+Math.sin(time*.22)*W*.017;
+ const y=H*(.17+blend*.30)+Math.sin(time*1.5)*Math.min(10,H*.011);
+ const scale=.85+blend*.18;
+ return {x,y,z:blend,scale,lane,blend};
 }
 function addPerson(x=W+random(70,220)){
  let list=['bald','grandma','woman','headphones','tourist','courier','fashion','coffee'];
@@ -42,9 +54,11 @@ function emit(){
  if(paused)return;
  if(!started){started=true;$('center').classList.add('hide')}
  let b=birdState();
+ // Lock each emission to the lane the gull occupied at the moment of release.
+ // A stream can never hit targets in the other lane.
  for(let i=0;i<13;i++){
    let age=i*.016;
-   drops.push({x:b.x+18*b.scale,y:b.y+18*b.scale,vx:128+random(-12,14),vy:34+random(-8,16),r:random(2.5,4.5),age:0,delay:age,trail:[],dead:false})
+   drops.push({x:b.x+18*b.scale,y:b.y+18*b.scale,vx:128+random(-12,14),vy:34+random(-8,16),r:random(2.5,4.5),lane:b.lane,age:0,delay:age,trail:[],dead:false})
  }
  play(250,.07,.008)
 }
@@ -67,21 +81,21 @@ function layerTileSection(im,speed,y,height,srcY0,srcY1){
 function drawBaseScene(){
  const s=streetMetrics();
  drawImage(imgs.sky,0,0,W,H);
- layerTile(imgs.skyline,.12,H*.42-H*.40,H*.40);
+ layerTile(imgs.skyline,.12,H*.13,H*.47);
  layerTile(imgs.buildings,.40,H*.36,H*.49);
  layerTile(imgs.street,1.0,s.y,s.h);
 }
-function drawStreetFrontOverlay(){ const s=streetMetrics(); layerTileSection(imgs.street,1.0,s.y,s.h,0,430); }
+function drawStreetFrontOverlay(){ /* Street art is rendered once; no duplicated foreground. */ }
 function drawPedestrians(){
- let baseline=sidewalkY()+Math.min(7,H*.009);
+ let baseline=sidewalkY();
  for(let p of people){
-   let h=clamp(H*.145,66,118), frame=Math.floor((time*7.2+p.phase)%4), im=imgs['walk_'+p.type+'_'+frame]||imgs['person_'+p.type], w=im?h*(im.width/im.height):h*.55;
-   let step=Math.sin(time*7.2+p.phase), bob=Math.abs(step)*1.8, sway=step*1.2, rot=step*.028;
+   let h=clamp(H*.108,52,89), frame=Math.floor((time*7.2+p.phase)%4), im=imgs['walk_'+p.type+'_'+frame]||imgs['person_'+p.type], w=im?h*(im.width/im.height):h*.55;
+   let step=Math.sin(time*7.2+p.phase), bob=Math.abs(step)*.8, sway=step*.75, rot=step*.012;
    ctx.save(); ctx.translate(p.x+sway, baseline-bob); ctx.rotate(rot); drawImage(im,-w*.5,-h,w,h); ctx.restore();
    p._box={left:p.x-w*.33,right:p.x+w*.33,top:baseline-h+6,bottom:baseline-2};
  }
 }
-function drawCars(){let y=roadY();for(let car of cars){let h=clamp(H*.14,65,112),im=imgs['car'+car.type],w=im?h*im.width/im.height:h*1.65;drawImage(im,car.x-w/2,y-h,w,h);car._box={left:car.x-w*.46,right:car.x+w*.46,top:y-h*.85,bottom:y-10};}}
+function drawCars(){let y=roadY();for(let car of cars){let h=clamp(H*.103,49,86),im=imgs['car'+car.type],w=im?h*im.width/im.height:h*1.65;drawImage(im,car.x-w/2,y-h,w,h);car._box={left:car.x-w*.46,right:car.x+w*.46,top:y-h*.85,bottom:y-10};}}
 function drawGull(){
  let safeFrames=[0,1,4,6,9,10,11,10,9,6,4,1], index=safeFrames[Math.floor((time*8)%safeFrames.length)], im=imgs['gull'+index], b=birdState();
  let w=clamp(W*.145,110,188)*b.scale, h=im?w*im.height/im.width:w*.6;
@@ -89,11 +103,11 @@ function drawGull(){
 }
 function reward(target,points,label){if(target.hit)return;target.hit=true;score+=points;hits++;$('score').textContent=score;$('hits').textContent=hits+' hits';bursts.push({x:target.x,y:target._box.top-15,life:1.25,points,label,kind:points===5?'bald_bonus':points===1?'spark':'burst'});play(points===5?780:points===2?580:440,.13,.012)}
 function splashAt(x,y){bursts.push({x,y,life:.5,kind:'water_3',points:0,label:''})}
-function drawDrops(dt){for(let d of drops){d.delay-=dt;if(d.delay>0)continue;if(d.dead)continue;d.vy+=860*dt;d.x+=d.vx*dt;d.y+=d.vy*dt;d.age+=dt;d.trail.push({x:d.x,y:d.y});if(d.trail.length>6)d.trail.shift();for(const p of people)if(!d.dead&&!p.hit&&p._box&&d.x>=p._box.left&&d.x<=p._box.right&&d.y>=p._box.top&&d.y<=p._box.bottom){d.dead=true;reward(p,p.type==='bald'?5:2,p.type==='bald'?'BALD BONUS!':'NICE!')}for(const car of cars)if(!d.dead&&!car.hit&&car._box&&d.x>=car._box.left&&d.x<=car._box.right&&d.y>=car._box.top&&d.y<=car._box.bottom){d.dead=true;reward(car,1,'SPLAT!')}if(d.y>roadY()){d.dead=true;splashAt(d.x,roadY()-7)}if(d.dead)continue;ctx.lineCap='round';ctx.lineWidth=d.r*.95;ctx.strokeStyle='#deeff7ed';ctx.beginPath();d.trail.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();ctx.fillStyle='#ccecf9';ctx.beginPath();ctx.ellipse(d.x,d.y,d.r*.7,d.r*1.65,0,0,7);ctx.fill();}drops=drops.filter(d=>!d.dead&&d.age<3)}
+function drawDrops(dt){for(let d of drops){d.delay-=dt;if(d.delay>0)continue;if(d.dead)continue;d.vy+=860*dt;d.x+=d.vx*dt;d.y+=d.vy*dt;d.age+=dt;d.trail.push({x:d.x,y:d.y});if(d.trail.length>6)d.trail.shift();for(const p of people)if(d.lane==='people'&&!d.dead&&!p.hit&&p._box&&d.x>=p._box.left&&d.x<=p._box.right&&d.y>=p._box.top&&d.y<=p._box.bottom){d.dead=true;reward(p,p.type==='bald'?5:2,p.type==='bald'?'BALD BONUS!':'NICE!')}for(const car of cars)if(d.lane==='cars'&&!d.dead&&!car.hit&&car._box&&d.x>=car._box.left&&d.x<=car._box.right&&d.y>=car._box.top&&d.y<=car._box.bottom){d.dead=true;reward(car,1,'SPLAT!')}if(d.y>roadY()){d.dead=true;splashAt(d.x,roadY()-7)}if(d.dead)continue;ctx.lineCap='round';ctx.lineWidth=d.r*.95;ctx.strokeStyle='#deeff7ed';ctx.beginPath();d.trail.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();ctx.fillStyle='#ccecf9';ctx.beginPath();ctx.ellipse(d.x,d.y,d.r*.7,d.r*1.65,0,0,7);ctx.fill();}drops=drops.filter(d=>!d.dead&&d.age<3)}
 function comicBurst(x,y,points,label,life,kind){const scale=.9+Math.sin((1.25-life)*11)*.08;ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);ctx.rotate(Math.sin(x*.123)*.11);const n=11,r=points===5?46:36;ctx.shadowColor='#3b2945aa';ctx.shadowBlur=9;ctx.shadowOffsetY=5;ctx.beginPath();for(let i=0;i<n*2;i++){let a=i*Math.PI/n-Math.PI/2,rr=i%2?r*.78:r;ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr*.72)}ctx.closePath();ctx.fillStyle=points===5?'#ffd738':points===2?'#ff70ae':'#62d6ff';ctx.fill();ctx.shadowColor='transparent';ctx.lineWidth=4;ctx.strokeStyle='#fff';ctx.stroke();ctx.lineWidth=2.5;ctx.strokeStyle='#41324f';ctx.stroke();ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.font='1000 30px system-ui,sans-serif';ctx.lineWidth=6;ctx.strokeStyle='#452a54';ctx.strokeText('+'+points,0,-5);ctx.fillStyle='#fff';ctx.fillText('+'+points,0,-5);ctx.font='1000 10px system-ui,sans-serif';ctx.lineWidth=3;ctx.strokeText(label,0,18);ctx.fillStyle=points===5?'#a61e59':'#332747';ctx.fillText(label,0,18);ctx.restore();}
 function drawBursts(dt){for(let b of bursts){b.life-=dt;b.y-=dt*17;ctx.globalAlpha=clamp(b.life*2,0,1);if(b.kind==='water_3'){drawImage(imgs.fx_water_3,b.x-21,b.y-18,42,35)}else comicBurst(b.x,b.y,b.points,b.label,b.life,b.kind);ctx.globalAlpha=1}bursts=bursts.filter(b=>b.life>0)}
-function update(dt){time+=dt;let velocity=clamp(W*.12,66,160);world+=velocity*dt;$('meters').textContent=Math.floor(world/12)+' m flown';for(let p of people)p.x-=(velocity*.98+p.speed)*dt;for(let car of cars)car.x-=(velocity*.98+car.speed)*dt;people=people.filter(p=>p.x>-140);cars=cars.filter(c=>c.x>-250);let npeople=clamp(Math.round(W/110),7,17),ncars=clamp(Math.round(W/280),3,8);while(people.length<npeople)addPerson(W+random(35,190));while(cars.length<ncars)addCar(W+random(90,380))}
-function loop(now){let dt=Math.min(.035,(now-last)/1000||.016);last=now;if(!paused)update(dt);ctx.clearRect(0,0,W,H);drawBaseScene();drawPedestrians();drawGull();drawStreetFrontOverlay();drawCars();if(!paused)drawDrops(dt);else drawDrops(0);drawBursts(paused?0:dt);requestAnimationFrame(loop)}
+function update(dt){time+=dt;let velocity=clamp(W*.12,66,160);world+=velocity*dt;$('lane').textContent=birdState().lane==='people'?'SIDEWALK · PEOPLE':'ROAD · CARS';$('meters').textContent=Math.floor(world/12)+' m flown';for(let p of people)p.x-=(velocity*.98+p.speed)*dt;for(let car of cars)car.x-=(velocity*.98+car.speed)*dt;people=people.filter(p=>p.x>-140);cars=cars.filter(c=>c.x>-250);let npeople=clamp(Math.round(W/110),7,17),ncars=clamp(Math.round(W/280),3,8);while(people.length<npeople)addPerson(W+random(35,190));while(cars.length<ncars)addCar(W+random(90,380))}
+function loop(now){let dt=Math.min(.035,(now-last)/1000||.016);last=now;if(!paused)update(dt);ctx.clearRect(0,0,W,H);drawBaseScene();drawPedestrians();drawCars();drawGull();if(!paused)drawDrops(dt);else drawDrops(0);drawBursts(paused?0:dt);requestAnimationFrame(loop)}
 })();
 
 </script></body></html>
