@@ -96,3 +96,9 @@ No license has been selected yet. All rights reserved until the owner chooses on
 - Gull scale now changes more dramatically by lane: smaller over pedestrians, larger over cars.
 - Streams inherit lane perspective too: smaller and lighter in the pedestrian lane.
 - Pedestrian scoring now uses a head hitbox. When a stream reaches a pedestrian's head, the whole stream stops immediately.
+
+## v0.7 crowd + traffic tuning
+- Streams released from the pedestrian lane now terminate at sidewalk level if they miss.
+- Cars are visually larger but spawn less frequently.
+- Pedestrians are fewer on screen.
+- Pedestrians are flipped so they face their movement direction instead of moonwalking backwards.
