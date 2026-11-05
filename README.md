@@ -116,3 +116,10 @@ No license has been selected yet. All rights reserved until the owner chooses on
 - Each of eight bollards and both streetlamps has its own tightly fitted silhouette.
 - Front layer and base street share exact scroll, flip and size parameters.
 - Reduced pedestrian vertical bob so feet stay grounded.
+
+## v0.10 — thinner stream and sound
+- 7 particles instead of 13 per release (approximately half density).
+- Release point shifted 43 pixels toward the tail at reference scale, under the bird.
+- Added self-contained WAV effects: soft wind ambience, gull call, stream release, pavement/road splash, hits, bald bonus.
+- Sounds are originally synthesized for this project, not downloaded from Kenney. Sound is OFF until the player turns it on.
+- No external audio hosting or third-party sample license required.
