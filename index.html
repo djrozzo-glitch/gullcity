@@ -1,20 +1,20 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>Gull and the City</title><link rel="icon" type="image/svg+xml" href="favicon.svg"><meta name="theme-color" content="#b9d4ed"><meta name="description" content="A cozy, endless seagull arcade game above a hand-painted city."><style>
 *{box-sizing:border-box}html,body{height:100%;width:100%;margin:0;overflow:hidden;touch-action:none;font-family:Georgia,serif;background:#b5cef3}canvas{width:100%;height:100%;display:block}#hud{position:fixed;top:16px;left:18px;color:#48505d;text-shadow:0 1px 2px #fffe;pointer-events:none}#hud h1{font-size:clamp(17px,2.25vw,30px);margin:0;letter-spacing:.015em;font-weight:700}#score{font-size:38px;font-family:system-ui,sans-serif;font-weight:800;line-height:1.1}#rules{font:11px system-ui,sans-serif;letter-spacing:.06em;font-weight:600}#stats{position:fixed;right:18px;top:20px;text-align:right;font:12px system-ui,sans-serif;color:#4f5662;text-shadow:0 1px 3px white;pointer-events:none}#center{position:fixed;left:50%;top:44%;transform:translate(-50%,-50%);text-align:center;color:#485064;text-shadow:0 2px 2px #fffc;pointer-events:none;transition:opacity .65s;width:90%}#center strong{font-size:clamp(30px,5vw,65px);font-weight:400;display:block}#center small{font:12px system-ui,sans-serif;display:block;margin-top:15px;letter-spacing:.12em}#center.hide{opacity:0}#bottom{position:fixed;bottom:22px;width:100%;text-align:center;color:#536373;font:11px system-ui,sans-serif;letter-spacing:.14em;pointer-events:none;text-shadow:0 1px 2px white}button{border:1px solid #7e82947a;background:#fff9eacb;color:#505969;border-radius:30px;padding:9px 14px;cursor:pointer;font:12px system-ui,sans-serif}#music{position:fixed;right:18px;bottom:15px}#sound{position:fixed;right:140px;bottom:15px}#pause{position:fixed;right:247px;bottom:15px}.loading{position:fixed;left:50%;top:65%;transform:translateX(-50%);font:12px system-ui;color:#465}.loading.hide{display:none}@media(max-width:620px){#bottom{display:none}#stats{font-size:10px}#hud h1{font-size:17px}#rules{font-size:9px}#pause{right:224px}#sound{right:117px}button{font-size:10px;padding:8px 10px}}
-</style></head><body><canvas id="game"></canvas><div id="hud"><h1>Gull and the City</h1><div id="score">0</div><div id="rules">BALD +5 &nbsp;·&nbsp; PERSON +2 &nbsp;·&nbsp; CAR +1</div></div><div id="stats"><div id="meters">0 m flown</div><div id="hits">0 hits</div><div id="lane" style="margin-top:7px;font-weight:800;letter-spacing:.08em">SIDEWALK · PEOPLE</div></div><div id="center"><strong>Just fly.</strong><small>CLICK · TAP · SPACE TO DROP</small></div><div class="loading" id="loading">Painting the city…</div><div id="bottom">TAKE YOUR TIME · THERE IS NO END</div><button id="pause">Ⅱ Pause</button><button id="sound">♪ FX off</button><button id="music">♫ Music off</button>
+</style></head><body><canvas id="game"></canvas><div id="hud"><h1>Gull and the City</h1><div id="score">0</div><div id="rules">BALD +5 &nbsp;·&nbsp; PERSON +2 &nbsp;·&nbsp; CAR +1</div></div><div id="stats"><div id="meters">0 m flown</div><div id="hits">0 hits</div><div id="lane" style="margin-top:7px;font-weight:800;letter-spacing:.08em">SIDEWALK · PEOPLE</div></div><div id="center"><strong>Just fly.</strong><small>CLICK · TAP · SPACE TO DROP</small></div><div class="loading" id="loading">Painting the city…</div><div id="bottom">TAKE YOUR TIME · THERE IS NO END</div><button id="pause">Ⅱ Pause</button><button id="sound">♪ FX on</button><button id="music">♫ Music on</button>
 <script>
 
 (()=>{'use strict';
 const canvas=document.getElementById('game'),ctx=canvas.getContext('2d'), $=id=>document.getElementById(id);
 const paths={sky:'backgrounds/sky',skyline:'backgrounds/skyline',buildings:'backgrounds/buildings',street:'backgrounds/street',street_front:'backgrounds/street_front'};
-let imgs={},W=innerWidth,H=innerHeight,D=1,time=0,world=0,score=0,hits=0,last=performance.now(),started=false,paused=false,soundOn=false,musicOn=false;
+let imgs={},W=innerWidth,H=innerHeight,D=1,time=0,world=0,score=0,hits=0,last=performance.now(),started=false,paused=false,soundOn=true,musicOn=true;
 let people=[],cars=[],drops=[],bursts=[];
 const soundFiles=['car_hit','person_hit','bald_bonus','gull_call'];
 let sfx={},lastGullCall=0,nextGullCall=23;
 const music=new Audio('sounds/gull_theme.mp3');
-music.loop=true;music.preload='none';music.volume=.33;
+music.loop=true;music.preload='auto';music.volume=.30;
 function initSound(){if(Object.keys(sfx).length)return;for(const n of soundFiles){let a=new Audio('assets/sounds/'+n+'.wav');a.preload='auto';a.volume=n==='gull_call'?.16:.16;sfx[n]=a;}}
 function sound(name,volume=1){if(!soundOn||paused)return;initSound();const base=sfx[name];if(!base)return;let a=base.cloneNode();a.volume=Math.min(1,base.volume*volume);a.play().catch(()=>{});}
-function syncMusic(){if(musicOn&&!paused){music.play().catch(()=>{$('music').textContent='♫ Music unavailable';});}else music.pause();}
+function syncMusic(){if(musicOn&&!paused&&started){const p=music.play();if(p)p.catch(e=>{if(e.name!=='NotAllowedError'&&e.name!=='AbortError'){$('music').textContent='♫ Music unavailable';console.warn(e);}});}else music.pause();}
 let shotCounter=0;
 const random=(a,b)=>a+Math.random()*(b-a), clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const imagePaths=[];
@@ -25,7 +25,7 @@ for(let i=0;i<8;i++)imagePaths.push(['car'+i,'assets/cars/car_'+String(i).padSta
 for(const n of ['badge','burst','bald_bonus','spark','cloud','water_0','water_1','water_2','water_3','water_4'])imagePaths.push(['fx_'+n,'assets/fx/'+n+'.png']);
 Promise.all(imagePaths.map(([name,path])=>new Promise(resolve=>{let im=new Image;im.onload=()=>{imgs[name]=im;resolve()};im.onerror=()=>{console.warn('Missing',path);resolve()};im.src=path}))).then(()=>{$('loading').classList.add('hide');setup();requestAnimationFrame(loop)});
 function resize(){W=innerWidth;H=innerHeight;D=Math.min(devicePixelRatio||1,2);canvas.width=Math.floor(W*D);canvas.height=Math.floor(H*D);ctx.setTransform(D,0,0,D,0,0);ctx.imageSmoothingEnabled=true;}
-function setup(){resize();people=[];cars=[];for(let i=0;i<Math.max(7,W/170);i++)addPerson(random(0,W+100));for(let i=0;i<Math.max(3,W/360);i++)addCar(random(0,W+240));}
+function setup(){resize();people=[];cars=[];const np=clamp(Math.round(W/180),5,10),nc=clamp(Math.round(W/500),2,4);for(let i=0;i<np;i++)addPerson((i+.4)*W/np+random(-20,20));for(let i=0;i<nc;i++)addCar((i+.5)*W/nc+random(-35,35));}
 addEventListener('resize',()=>resize());
 function streetMetrics(){const fullH=H*.51, y=H*.49; return {y,h:fullH};}
 function sidewalkY(){const s=streetMetrics(); return s.y + s.h*0.685;}
@@ -37,14 +37,14 @@ function birdState(){
  let blend;
  if(phase<9.3) blend=0;
  else if(phase<9.3+transition){
-   const u=(phase-9.3)/transition; blend=u*u*(3-2*u);
+   const u=(phase-9.3)/transition; blend=u*u*u*(u*(u*6-15)+10);
  }else if(phase<21.8) blend=1;
  else {
-   const u=(phase-21.8)/transition; blend=1-u*u*(3-2*u);
+   const u=(phase-21.8)/transition; blend=1-u*u*u*(u*(u*6-15)+10);
  }
  blend=clamp(blend,0,1);
  const lane=blend<.5?'people':'cars';
- const x=W*.28+Math.sin(time*.13)*W*.017;
+ const x=W*.28+Math.sin(time*.13)*W*.013;
  const y=H*(.17+blend*.30)+Math.sin(time*.95)*Math.min(9,H*.011);
  const scale=.64+blend*.40;
  return {x,y,z:blend,scale,lane,blend};
@@ -56,11 +56,11 @@ function addPerson(x=W+random(70,220)){
 }
 function addCar(x=W+random(80,400)){cars.push({x,type:Math.floor(random(0,8)),speed:random(23,57),hit:false,phase:random(0,7)})}
 $('sound').onclick=()=>{soundOn=!soundOn;$('sound').textContent=soundOn?'♪ FX on':'♪ FX off';if(soundOn){initSound();lastGullCall=time;nextGullCall=time+random(22,38);}};
-$('music').onclick=()=>{musicOn=!musicOn;$('music').textContent=musicOn?'♫ Music on':'♫ Music off';syncMusic();};
-$('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'▶ Resume':'Ⅱ Pause';syncMusic();};
+$('music').onclick=()=>{musicOn=!musicOn;$('music').textContent=musicOn?'♫ Music on':'♫ Music off';if(!started){started=true;$('center').classList.add('hide');initSound();}syncMusic();};
+$('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'▶ Resume':'Ⅱ Pause';if(!started&&!paused){started=true;$('center').classList.add('hide');initSound();}syncMusic();};
 function emit(){
  if(paused)return;
- if(!started){started=true;$('center').classList.add('hide')}
+ if(!started){started=true;$('center').classList.add('hide');initSound();syncMusic()}
  let b=birdState();
  const shotId=++shotCounter;
  const streamScale=b.lane==='people'?.68:1.0;
@@ -93,7 +93,7 @@ function drawBaseScene(){
  drawImage(imgs.sky,0,0,W,H);
  // Lower and slightly enlarge the distant skyline so it overlaps more naturally
  // with the nearer roofs and removes the blue gap between city layers.
- layerTile(imgs.skyline,.12,H*.18,H*.50);
+ layerTile(imgs.skyline,.12,H*.11,H*.80);
  layerTile(imgs.buildings,.40,H*.35,H*.51);
  layerTile(imgs.street,1.0,s.y,s.h);
 }
@@ -142,7 +142,7 @@ if(!d.dead&&d.lane==='cars'&&d.y>roadY()-5){
 if(d.dead)continue;ctx.lineCap='round';ctx.lineWidth=d.r*.92;ctx.strokeStyle=d.lane==='people'?'#edf8ffe2':'#deeff7ed';ctx.beginPath();d.trail.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();ctx.fillStyle=d.lane==='people'?'#e8f7ff':'#ccecf9';ctx.beginPath();ctx.ellipse(d.x,d.y,d.r*.68,d.r*1.55,0,0,7);ctx.fill();}drops=drops.filter(d=>!d.dead&&d.age<3)}
 function comicBurst(x,y,points,label,life,kind){const scale=.9+Math.sin((1.25-life)*11)*.08;ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);ctx.rotate(Math.sin(x*.123)*.11);const n=11,r=points===5?46:36;ctx.shadowColor='#3b2945aa';ctx.shadowBlur=9;ctx.shadowOffsetY=5;ctx.beginPath();for(let i=0;i<n*2;i++){let a=i*Math.PI/n-Math.PI/2,rr=i%2?r*.78:r;ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr*.72)}ctx.closePath();ctx.fillStyle=points===5?'#ffd738':points===2?'#ff70ae':'#62d6ff';ctx.fill();ctx.shadowColor='transparent';ctx.lineWidth=4;ctx.strokeStyle='#fff';ctx.stroke();ctx.lineWidth=2.5;ctx.strokeStyle='#41324f';ctx.stroke();ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.font='1000 30px system-ui,sans-serif';ctx.lineWidth=6;ctx.strokeStyle='#452a54';ctx.strokeText('+'+points,0,-5);ctx.fillStyle='#fff';ctx.fillText('+'+points,0,-5);ctx.font='1000 10px system-ui,sans-serif';ctx.lineWidth=3;ctx.strokeText(label,0,18);ctx.fillStyle=points===5?'#a61e59':'#332747';ctx.fillText(label,0,18);ctx.restore();}
 function drawBursts(dt){for(let b of bursts){b.life-=dt;b.y-=dt*17;ctx.globalAlpha=clamp(b.life*2,0,1);if(b.kind==='water_3'){drawImage(imgs.fx_water_3,b.x-21,b.y-18,42,35)}else comicBurst(b.x,b.y,b.points,b.label,b.life,b.kind);ctx.globalAlpha=1}bursts=bursts.filter(b=>b.life>0)}
-function update(dt){time+=dt;if(soundOn&&time>=nextGullCall){lastGullCall=time;nextGullCall=time+random(22,38);sound('gull_call',.52);}let velocity=clamp(W*.066,36,86);world+=velocity*dt;$('lane').textContent=birdState().lane==='people'?'SIDEWALK · PEOPLE':'ROAD · CARS';$('meters').textContent=Math.floor(world/12)+' m flown';for(let p of people)p.x-=(velocity*.98+p.speed)*dt;for(let car of cars)car.x-=(velocity*.98+car.speed)*dt;people=people.filter(p=>p.x>-140);cars=cars.filter(c=>c.x>-250);let npeople=clamp(Math.round(W/155),5,11),ncars=clamp(Math.round(W/430),2,4);while(people.length<npeople)addPerson(W+random(35,190));while(cars.length<ncars)addCar(W+random(90,380))}
+function update(dt){time+=dt;if(soundOn&&time>=nextGullCall){lastGullCall=time;nextGullCall=time+random(22,38);sound('gull_call',.52);}let velocity=clamp(W*.066,36,86);world+=velocity*dt;$('lane').textContent=birdState().lane==='people'?'SIDEWALK · PEOPLE':'ROAD · CARS';$('meters').textContent=Math.floor(world/12)+' m flown';for(let p of people)p.x-=(velocity*.98+p.speed)*dt;for(let car of cars)car.x-=(velocity*.98+car.speed)*dt;people=people.filter(p=>p.x>-140);cars=cars.filter(c=>c.x>-250);let npeople=clamp(Math.round(W/180),5,10),ncars=clamp(Math.round(W/500),2,4);while(people.length<npeople){const furthest=people.reduce((m,p)=>Math.max(m,p.x),W);addPerson(Math.max(W+random(60,115),furthest+random(135,205)));}while(cars.length<ncars){const furthest=cars.reduce((m,c)=>Math.max(m,c.x),W);addCar(Math.max(W+random(160,230),furthest+random(300,430)));}}
 function loop(now){let dt=Math.min(.035,(now-last)/1000||.016);last=now;if(!paused)update(dt);ctx.clearRect(0,0,W,H);drawBaseScene();drawPedestrians();drawStreetFrontOverlay();drawCars();drawGull();if(!paused)drawDrops(dt);else drawDrops(0);drawBursts(paused?0:dt);requestAnimationFrame(loop)}
 })();
 
